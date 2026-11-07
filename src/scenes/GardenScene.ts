@@ -69,16 +69,8 @@ export class GardenScene extends Phaser.Scene {
 
     // Unsubscribe on shutdown: the scene instance is reused when returning from the mine.
     const kb = this.input.keyboard;
-    const addStone = (): void => {
-      state.addItem('stone', 10);
-    };
-    // TEMP debug (remove in P2 step 5): G adds 10 stone to test stacks and overflow.
-    kb?.on('keydown-G', addStone);
     kb?.on('keydown-E', this.onInteract);
-    this.events.once('shutdown', () => {
-      kb?.off('keydown-G', addStone);
-      kb?.off('keydown-E', this.onInteract);
-    });
+    this.events.once('shutdown', () => kb?.off('keydown-E', this.onInteract));
   }
 
   private onEntrance(): boolean {
