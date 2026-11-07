@@ -8,6 +8,7 @@ export type GameEvents = {
   dayChanged: number;
   inventoryChanged: void;
   slotSelected: number;
+  floorChanged: number;
 };
 
 // Spritesheet keys of the playable characters.
@@ -19,6 +20,7 @@ const START_DAY = 1;
 export class GameState {
   day = START_DAY;
   character: CharacterKey = 'player_male';
+  floor = 0; // 0 = garden, 1+ = mine floor
   readonly inventory = new Inventory(HOTBAR_SIZE, maxStackOf);
   readonly events = new Emitter<GameEvents>();
 
@@ -47,6 +49,11 @@ export class GameState {
   // Chosen before the garden starts, so no event is needed.
   setCharacter(key: CharacterKey): void {
     this.character = key;
+  }
+
+  setFloor(n: number): void {
+    this.floor = n;
+    this.events.emit('floorChanged', n);
   }
 
   nextDay(): void {

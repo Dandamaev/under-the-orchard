@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { TILE } from '../constants';
+import { MINE_RULES } from '../logic/mine';
 import { getItem, ITEM_IDS } from '../logic/db';
 import { TILE_KINDS, type TileKind } from '../logic/grid';
 import { createPlayerAnims, FRAME_H, FRAME_W } from '../objects/playerAnims';
@@ -14,6 +15,10 @@ const ICON_OUTLINE = 0x1a1410;
 const TILE_COLORS: Partial<Record<TileKind, number>> = {
   wall: 0x7a7a82,
   tree: 0x2d5a27,
+  mine_floor: 0x4a4258,
+  mine_wall: 0x26202e,
+  ladder_up: 0xd2b06a,
+  ladder_down: 0x8a6a3a,
 };
 
 export class BootScene extends Phaser.Scene {
@@ -32,6 +37,7 @@ export class BootScene extends Phaser.Scene {
   create(): void {
     this.buildTileset();
     this.buildItemIcons();
+    this.buildRockTextures();
     for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
     this.scene.start('CharacterSelect');
@@ -45,6 +51,18 @@ export class BootScene extends Phaser.Scene {
       g.fillStyle(color).fillRect(0, 0, ICON_SIZE, ICON_SIZE);
       g.lineStyle(1, ICON_OUTLINE).strokeRect(0.5, 0.5, ICON_SIZE - 1, ICON_SIZE - 1);
       g.generateTexture(`item_${id}`, ICON_SIZE, ICON_SIZE);
+      g.destroy();
+    }
+  }
+
+  // Placeholder rocks 'rock_<type>': rounded so they differ from the flat floor.
+  private buildRockTextures(): void {
+    for (const [type, def] of Object.entries(MINE_RULES.rocks)) {
+      const color = Phaser.Display.Color.HexStringToColor(def.color).color;
+      const g = this.add.graphics();
+      g.fillStyle(color).fillRoundedRect(0, 0, TILE, TILE, 4);
+      g.lineStyle(1, ICON_OUTLINE).strokeRoundedRect(0.5, 0.5, TILE - 1, TILE - 1, 4);
+      g.generateTexture(`rock_${type}`, TILE, TILE);
       g.destroy();
     }
   }

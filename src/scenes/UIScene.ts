@@ -19,6 +19,7 @@ interface SlotView {
 // HUD drawn over the game scenes; stays running across scene changes.
 export class UIScene extends Phaser.Scene {
   private dayText!: Phaser.GameObjects.Text;
+  private floorText!: Phaser.GameObjects.Text;
   private slots: SlotView[] = [];
 
   constructor() {
@@ -48,7 +49,13 @@ export class UIScene extends Phaser.Scene {
       fontSize: '12px',
       color: '#f4ecd8',
     });
+    this.floorText = this.add.text(BAR_MARGIN, BAR_MARGIN + 14, '', {
+      fontFamily: 'monospace',
+      fontSize: '12px',
+      color: '#f4ecd8',
+    });
     this.renderDay(state.day);
+    this.renderFloor(state.floor);
     this.renderHotbar();
 
     // Slot input lives here because this scene runs all the time.
@@ -61,10 +68,12 @@ export class UIScene extends Phaser.Scene {
 
     // Unsubscribe on shutdown so restarts don't stack handlers.
     state.events.on('dayChanged', this.renderDay);
+    state.events.on('floorChanged', this.renderFloor);
     state.events.on('inventoryChanged', this.renderHotbar);
     state.events.on('slotSelected', this.renderHotbar);
     this.events.once('shutdown', () => {
       state.events.off('dayChanged', this.renderDay);
+      state.events.off('floorChanged', this.renderFloor);
       state.events.off('inventoryChanged', this.renderHotbar);
       state.events.off('slotSelected', this.renderHotbar);
     });
@@ -72,6 +81,11 @@ export class UIScene extends Phaser.Scene {
 
   private renderDay = (day: number): void => {
     this.dayText.setText(`День ${day}`);
+  };
+
+  // Floor 0 is the garden: no label.
+  private renderFloor = (floor: number): void => {
+    this.floorText.setText(floor > 0 ? `Этаж ${floor}` : '');
   };
 
   private renderHotbar = (): void => {

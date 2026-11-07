@@ -55,10 +55,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   // Player cell = cell of the body centre (the feet).
-  frontCell(): Cell {
+  cell(): Cell {
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const col = Math.floor(body.center.x / TILE);
-    const row = Math.floor(body.center.y / TILE);
+    return { col: Math.floor(body.center.x / TILE), row: Math.floor(body.center.y / TILE) };
+  }
+
+  frontCell(): Cell {
+    const { col, row } = this.cell();
     return cellInFront(col, row, this.facing);
+  }
+
+  // Used by scene transitions: stand still facing the same way.
+  halt(): void {
+    this.setVelocity(0, 0);
+    this.anims.play(idleKey(this.textureKey, this.facing), true);
   }
 }
