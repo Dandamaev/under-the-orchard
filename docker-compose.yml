@@ -1,0 +1,20 @@
+# Explicit name: the folder name has spaces.
+name: under-the-orchard
+
+services:
+  dev:
+    build: .
+    image: under-the-orchard-dev
+    working_dir: /app
+    init: true                      # Ctrl+C stops the server cleanly
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app                      # source code from Windows (bind mount)
+      - node_modules:/app/node_modules  # deps stay inside Docker
+    environment:
+      - CHOKIDAR_USEPOLLING=true    # file watching over a Windows bind mount
+
+volumes:
+  node_modules:
