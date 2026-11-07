@@ -8,6 +8,7 @@ import { buildTilemap } from '../objects/tilemap';
 // Garden world: tilemap from the ASCII map plus the walking player.
 export class GardenScene extends Phaser.Scene {
   private player!: Player;
+  private frontMarker!: Phaser.GameObjects.Rectangle;
 
   constructor() {
     super('Garden');
@@ -26,6 +27,9 @@ export class GardenScene extends Phaser.Scene {
     this.player = new Player(this, cx, cy);
     this.physics.add.collider(this.player, layer);
 
+    // TEMP debug: thin unfilled frame on the cell in front of the player.
+    this.frontMarker = this.add.rectangle(0, 0, TILE, TILE).setOrigin(0, 0).setStrokeStyle(1, 0xffffff).setDepth(10);
+
     // Camera stops at map edges; roundPixels keeps the pixel grid steady.
     this.cameras.main.setBounds(0, 0, widthInPixels, heightInPixels);
     this.cameras.main.startFollow(this.player, true);
@@ -33,5 +37,9 @@ export class GardenScene extends Phaser.Scene {
 
   update(): void {
     this.player.update();
+
+    // TEMP debug highlight of the target cell; P2 replaces it with real tool feedback.
+    const { col, row } = this.player.frontCell();
+    this.frontMarker.setPosition(col * TILE, row * TILE);
   }
 }
