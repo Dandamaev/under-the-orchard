@@ -1,0 +1,18 @@
+{
+  "items": {
+    "pickaxe_wood": { "name": "Деревянная кирка", "kind": "tool", "tool": "pickaxe", "color": "#a0703c" },
+    "hoe":          { "name": "Мотыга",           "kind": "tool", "tool": "hoe",     "color": "#7a5a3a" },
+    "watering_can": { "name": "Лейка",            "kind": "tool", "tool": "watering_can", "color": "#5a8ab0" },
+    "seed_turnip":  { "name": "Семена репы",      "kind": "seed", "plant": "turnip", "color": "#d8c88a", "maxStack": 99 },
+    "turnip":       { "name": "Репа",             "kind": "crop", "color": "#e6d6f0", "maxStack": 99 },
+    "stone":        { "name": "Камень",           "kind": "resource", "color": "#8a8a8a", "maxStack": 99 },
+    "coal":         { "name": "Уголь",            "kind": "resource", "color": "#2e2e2e", "maxStack": 99 },
+    "copper_ore":   { "name": "Медная руда",      "kind": "resource", "color": "#c47a3a", "maxStack": 99 }
+  },
+  "startInventory": [
+    { "id": "pickaxe_wood", "count": 1 },
+    { "id": "hoe", "count": 1 },
+    { "id": "watering_can", "count": 1 },
+    { "id": "seed_turnip", "count": 5 }
+  ]
+}
