@@ -319,10 +319,12 @@ dist
   "devDependencies": {
     "typescript": "~5.9.0",
     "vite": "^7.0.0",
-    "vitest": "^3.2.0"
+    "vitest": "^5.1.0"
   }
 }
 ```
+
+Vitest поднят с 3.2 до 5.1: в 3.x есть уязвимости (tinypool, @vitest/mocker), `npm audit` после обновления — 0. Vitest 5 совместим с Vite 7.
 
 Phaser зафиксирован на ветке 3.90 (`~`), чтобы случайно не уехать на Phaser 4. Перед первым `npm install` исполнитель может проверить актуальные версии: `docker compose run --rm dev npm view phaser@3 version` и т.п.; если какая-то версия не находится — взять ближайшую стабильную, не меняя мажор.
 
