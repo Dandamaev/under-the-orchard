@@ -45,6 +45,9 @@ export class GardenScene extends Phaser.Scene {
     // Camera stops at map edges; roundPixels keeps the pixel grid steady.
     this.cameras.main.setBounds(0, 0, widthInPixels, heightInPixels);
     this.cameras.main.startFollow(this.player, true);
+
+    // TEMP debug (remove in P2 step 5): G adds 10 stone to test stacks and overflow.
+    this.input.keyboard?.on('keydown-G', () => state.addItem('stone', 10));
   }
 
   update(): void {

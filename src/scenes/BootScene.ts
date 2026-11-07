@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
 import { TILE } from '../constants';
+import { getItem, ITEM_IDS } from '../logic/db';
 import { TILE_KINDS, type TileKind } from '../logic/grid';
 import { createPlayerAnims, FRAME_H, FRAME_W } from '../objects/playerAnims';
 import { GARDEN_TILES_KEY, GRASS_FRAMES, KIND_FRAMES, TILESET_KEY, TILESET_SLOTS } from '../objects/tilemap';
 
 export const MINE_ENTRANCE_KEY = 'mine_entrance';
 const CHARACTER_KEYS = ['player_male', 'player_female'] as const;
+const ICON_SIZE = 14; // slightly smaller than a hotbar slot
+const ICON_OUTLINE = 0x1a1410;
 
 // Placeholder colors for kinds without art yet (wall, tree).
 const TILE_COLORS: Partial<Record<TileKind, number>> = {
@@ -28,9 +31,22 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     this.buildTileset();
+    this.buildItemIcons();
     for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
     this.scene.start('CharacterSelect');
+  }
+
+  // Placeholder icons: a PNG loaded under the same 'item_<id>' key can replace them later.
+  private buildItemIcons(): void {
+    for (const id of ITEM_IDS) {
+      const color = Phaser.Display.Color.HexStringToColor(getItem(id).color).color;
+      const g = this.add.graphics();
+      g.fillStyle(color).fillRect(0, 0, ICON_SIZE, ICON_SIZE);
+      g.lineStyle(1, ICON_OUTLINE).strokeRect(0.5, 0.5, ICON_SIZE - 1, ICON_SIZE - 1);
+      g.generateTexture(`item_${id}`, ICON_SIZE, ICON_SIZE);
+      g.destroy();
+    }
   }
 
   // Compose the 'tiles' strip: slots follow TILE_KINDS, then extra grass variants.
