@@ -30,8 +30,7 @@ export class BootScene extends Phaser.Scene {
     this.buildTileset();
     for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
-    this.scene.start('Garden');
-    this.scene.launch('UI');
+    this.scene.start('CharacterSelect');
   }
 
   // Compose the 'tiles' strip: slots follow TILE_KINDS, then extra grass variants.

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GRASS_COLOR, SCREEN_H, SCREEN_W } from './constants';
 import { BootScene } from './scenes/BootScene';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { GardenScene } from './scenes/GardenScene';
 import { UIScene } from './scenes/UIScene';
 
@@ -16,5 +17,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, GardenScene, UIScene],
+  scene: [BootScene, CharacterSelectScene, GardenScene, UIScene],
 });

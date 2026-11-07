@@ -5,12 +5,21 @@ export type GameEvents = {
   dayChanged: number;
 };
 
+// Spritesheet keys of the playable characters.
+export type CharacterKey = 'player_male' | 'player_female';
+
 const START_DAY = 1;
 
 // Single shared game state. Only its methods mutate data and emit events.
 export class GameState {
   day = START_DAY;
+  character: CharacterKey = 'player_male';
   readonly events = new Emitter<GameEvents>();
+
+  // Chosen before the garden starts, so no event is needed.
+  setCharacter(key: CharacterKey): void {
+    this.character = key;
+  }
 
   nextDay(): void {
     this.day += 1;

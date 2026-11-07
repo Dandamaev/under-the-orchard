@@ -4,10 +4,9 @@ import gardenJson from '../data/maps/garden.json';
 import { findBlockOrigin, parseMap, type MapData } from '../logic/grid';
 import { Player } from '../objects/Player';
 import { buildTilemap } from '../objects/tilemap';
+import { state } from '../state';
 import { MINE_ENTRANCE_KEY } from './BootScene';
 
-// Character sheet key; the character-select step will pass player_female instead.
-const DEFAULT_CHARACTER = 'player_male';
 // Above any y-sorted object (world is < 1000 px tall).
 const MARKER_DEPTH = 10000;
 
@@ -37,7 +36,7 @@ export class GardenScene extends Phaser.Scene {
 
     const cx = (grid.spawn.col + 0.5) * TILE;
     const cy = (grid.spawn.row + 0.5) * TILE;
-    this.player = new Player(this, cx, cy, DEFAULT_CHARACTER);
+    this.player = new Player(this, cx, cy, state.character);
     this.physics.add.collider(this.player, layer);
 
     // TEMP debug: thin unfilled frame on the cell in front of the player.
