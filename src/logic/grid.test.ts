@@ -19,8 +19,8 @@ describe('parseMap', () => {
     expect(small.cells[1][1]).toBe('grass');
   });
 
-  it('marks wall, tree and mine roof as solid only', () => {
-    expect([...SOLID_KINDS].sort()).toEqual(['mine_roof', 'tree', 'wall']);
+  it('marks wall, tree, mine roof and mine wall as solid only', () => {
+    expect([...SOLID_KINDS].sort()).toEqual(['mine_roof', 'mine_wall', 'tree', 'wall']);
     for (const k of SOLID_KINDS) expect(TILE_KINDS).toContain(k);
   });
 

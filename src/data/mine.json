@@ -1,0 +1,11 @@
+{
+  "rocks": {
+    "rock":   { "hits": 2, "drop": "stone",      "color": "#9a9a9a" },
+    "coal":   { "hits": 3, "drop": "coal",       "color": "#3a3a3a" },
+    "copper": { "hits": 5, "drop": "copper_ore", "color": "#c47a3a" }
+  },
+  "floors": [
+    { "from": 1, "to": 4,    "rockCount": [12, 18], "weights": { "rock": 80, "coal": 20 } },
+    { "from": 5, "to": null, "rockCount": [14, 20], "weights": { "rock": 60, "coal": 20, "copper": 20 } }
+  ]
+}
