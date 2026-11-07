@@ -1,0 +1,27 @@
+# Node / web (prototype)
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+coverage/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Godot (full version, later)
+.godot/
+*.import
+export_presets.cfg
+
+# Claude Code local-only overrides (keep team config .claude/ committed)
+.claude/settings.local.json
