@@ -54,13 +54,14 @@ The art must be **original**. It belongs to the general cozy farming genre, but 
 ## 3.1 Status — what is already delivered (Nov 2026)
 
 > **Для Гаджи (RU):** что уже готово и подключено в игру, а что ещё нужно. Отмечай здесь по мере того, как добавляешь ассеты.
+> Где лежат файлы: `public/assets/` — то, что реально грузит игра; `docs/assets/` — архив исходников и превью (туда же клади всё, что прислала нейросеть, даже неудачное); `dist/` — результат сборки, руками не трогать. Новый ассет попадает в игру, только когда его положили в `public/assets/` и подключили в коде.
 
 | Asset | File | Status |
 |---|---|---|
 | Hero, hat variant | `player_male.png` (80×96) | ✅ in game (character select) |
 | Hero, headscarf variant | `player_female.png` (80×96) | ✅ in game (character select) |
 | Hero, neutral | `player.png` | ⛔ not used (back view reads as a face without eyes) |
-| Surface tiles (grass ×3, path, soil, tilled, watered, hedge) | `tiles_garden.png` (128×16) | ✅ grass + soil in game; tilled/watered → P3; hedge not used (see 4.2) |
+| Surface tiles (8 frames, see 4.2) | `tiles_garden.png` (128×16) | ✅ grass + soil in game; ⚠️ tilled/watered pair needs a redo before P3 (see 4.2); hedge not used |
 | Mine entrance | `mine_entrance.png` (32×32) | ✅ in game |
 | Trees | — | ❌ needed (placeholders now) |
 | House | — | ❌ needed (placeholder block now) |
@@ -68,7 +69,9 @@ The art must be **original**. It belongs to the general cozy farming genre, but 
 | Mine tiles, rocks | — | ❌ needed for P2 |
 | Crops, item icons, hotbar UI | — | ❌ needed for P2–P3 |
 
-Feedback on the delivered hero sprites: format is perfect. Next time please add the **1 px colored outline** from the style guide — the green clothes partly blend with the grass.
+Feedback on the delivered hero sprites: format is perfect. Next time please add the **1 px colored outline** from the style guide — the green clothes partly blend with the grass. In the **back view (row 2)** the head is one big dark blob; show a bit of hat brim / hair shape and the neck so it reads as "seen from behind".
+
+Feedback on `mine_entrance.png`: good — it already has the outline and palette we want; use it as the **style reference** for trees and the house.
 
 ## 3.2 How the garden map is laid out (so sizes fit)
 
@@ -88,20 +91,34 @@ The garden is a 40×25 tile grid. Things that matter for art sizes:
 - Friendly young gardener/miner: simple work clothes (earthy colors), small backpack or apron. Readable silhouette at 16 px wide.
 - Frame size: **16×24 px** (character is a bit taller than one tile).
 - Directions: **down, up, left, right** (right can be a mirror of left — say so if mirrored).
-- Sheet `player.png`, rows = directions in order **down, up, left, right**:
+- One sheet per variant (`player_male.png`, `player_female.png`), same layout; rows = directions in order **down, up, left, right**:
   - Columns 1: **idle** (1 frame)
   - Columns 2–5: **walk** (4 frames)
   - → sheet size 5 × 16 = 80 px wide, 4 × 24 = 96 px tall.
-- Later (Priority 2): tool use animation — swing (pickaxe/hoe), water (watering can), 3 frames per direction.
+- Next (needed for P2–P3): tool use animation, **both variants**, separate sheets `player_male_tools.png` / `player_female_tools.png`, 16×24 frames, rows **down, up, left, right**:
+  - Columns 1–3: **swing** (raise → hit → recover; used for pickaxe and hoe, the tool itself is drawn in the hand)
+  - Columns 4–6: **water** (tilt the watering can)
+  - → sheet size 6 × 16 = 96 px wide, 96 px tall. The tool may stick out of the 16 px width only if you widen the frame for **all** frames — tell us the new frame size.
 
 #### 4.2 Surface tiles (16×16 each) → `tiles_garden.png`
-1. Grass (2–3 variants, seamless; one with tiny flowers)
-2. Dirt path
-3. Untilled soil patch
-4. Tilled soil (hoed bed)
-5. Tilled soil, **watered** (darker, wet)
-6. ~~Wall / hedge~~ — the delivered hedge tile has a brown strip at the bottom, so a row of them looks striped. **Do not reuse it for the border** — see 4.3c.
-7. **Mine entrance** — ✅ delivered `mine_entrance.png` (32×32).
+The game reads tiles **by their position** in the strip. **Never reorder existing frames** — fix a frame in place, and add new tiles **at the end** (frame 8, 9, …).
+
+Current strip (128×16, 8 frames):
+
+| Frame | Content | In game | Verdict |
+|---|---|---|---|
+| 0 | Grass with tiny flowers | grass variant (rare) | ✅ keep |
+| 1 | Grass, plain | main grass | ✅ keep |
+| 2 | Light dirt, untilled | not yet (path / bare soil) | ✅ keep |
+| 3 | Dark soil with furrows | the crop field (`soil`) | ✅ keep — this is the "tilled bed" look |
+| 4 | Light horizontal stripes | not used | ⚠️ **redo**: reads as wooden planks, not soil. Replace with **tilled soil, dry**: same furrows as frame 3 but a bit lighter |
+| 5 | Very dark soil with furrows | not used | ⚠️ **redo**: too close to frame 3. Make **tilled soil, watered** = exactly frame 4's furrows, darker and wet (a few dark-blue-brown puddle pixels) — the dry → wet change must be obvious at a glance |
+| 6 | Hedge with brown strip at the bottom | not used | ⛔ do not reuse for the border (a row looks striped) — see 4.3c |
+| 7 | Grass, plain variant | grass variant | ✅ keep |
+
+Rule for the tilled pair (frames 4 and 5): **identical shape**, only the colors differ — the game swaps one for the other when the player waters.
+
+**Mine entrance** — ✅ delivered `mine_entrance.png` (32×32).
 
 #### 4.3 Trees → `trees.png` or one PNG per tree
 - **Orchard fruit tree** (apple-like, original design): **32×48 px** (2 tiles wide, 3 tall). The **trunk base sits on the bottom row, centered** — that single tile is the only solid part. Canopy must look fine when it overlaps the tree behind it (trees are 3 tiles apart horizontally, 2 tiles vertically). Versions: without fruit, with fruit.
@@ -129,11 +146,11 @@ Both are **tile sets that connect seamlessly** when placed next to each other.
   3. 4 outer corners
   - Must look like a solid, slightly raised edge in 3/4 view (top surface + a bit of the front face).
 
-#### 4.4 Mine tiles (16×16 each) → `tiles_mine.png`
-1. Cave floor (2–3 variants, seamless)
-2. Cave wall (top surface + front face, so walls look raised)
-3. **Ladder down** (hole in floor with ladder)
-4. **Ladder up** (ladder leaning to the ceiling with a little light from above)
+#### 4.4 Mine tiles (16×16 each) → `tiles_mine.png`, one row in **this exact frame order**:
+0–2. Cave floor (3 variants, seamless; frame 0 = the plain one)
+3. Cave wall (top surface + front face, so walls look raised)
+4. **Ladder down** (hole in floor with ladder)
+5. **Ladder up** (ladder leaning to the ceiling with a little light from above)
 
 #### 4.5 Breakable rocks (16×16, transparent)
 1. Small stone (2 variants)
@@ -151,10 +168,8 @@ For **turnip** and **carrot**, a horizontal strip of **4 growth stages**:
 Draw them **without** the soil underneath (transparent) — they are placed on top of the tilled-soil tile.
 
 #### 4.7 Item icons (16×16, transparent) → `items.png`
-Tools: wooden pickaxe, hoe, watering can.
-Resources: stone, wood (log), coal, copper ore.
-Seeds: turnip seeds (packet or seeds), carrot seeds.
-Produce: turnip, carrot.
+One row, **this exact frame order** (the game looks icons up by position; new icons go at the end):
+0 wooden pickaxe, 1 hoe, 2 watering can, 3 stone, 4 wood log, 5 coal, 6 copper ore, 7 turnip seeds, 8 carrot seeds, 9 turnip, 10 carrot → 176×16 px.
 
 #### 4.8 UI
 - Hotbar slot 20×20 px (normal) + selected/highlighted version.
@@ -182,8 +197,11 @@ Use the style block + one asset description.
 **Style block (prepend to every prompt):**
 > Original pixel art game asset, cozy top-down farming game, slight 3/4 view, 16x16 pixel grid, crisp hard pixels, no anti-aliasing, no blur, 1px colored dark-brown outline, light from top-left, flat 2–3 tone shading, soft warm limited palette, transparent background, not in the style of any existing game.
 
-**Hero spritesheet:**
-> Spritesheet of a friendly young gardener character, gender-neutral, earthy work clothes, straw hat, small apron. 16x24 pixel frames, 4 rows (facing down, up, left, right), 5 columns (1 idle + 4 walk cycle frames). Feet at bottom-center of each frame. No gaps between frames.
+**Hero tool animations** (do it twice: once for the straw-hat hero, once for the headscarf hero; attach the existing `player_male.png` / `player_female.png` as reference):
+> Spritesheet of the same character as the reference image, same colors and proportions, 1px dark-brown outline. 16x24 pixel frames, 4 rows (facing down, up, left, right), 6 columns: 3 frames swinging a small wooden pickaxe (raise, hit, recover), 3 frames pouring a watering can. Feet at bottom-center of each frame. No gaps between frames.
+
+**Tilled soil fix:**
+> Two 16x16 seamless ground tiles side by side (32x16 total): left — dry hoed soil with horizontal furrows, warm medium brown; right — the exact same furrows but wet, darker brown with a few tiny dark puddle pixels. Same shape, only colors differ. No transparency.
 
 **Fruit tree:**
 > Orchard fruit tree, 32x48 pixels, round soft canopy in warm greens, short thick trunk, a few red fruits. Second version without fruits. Transparent background.
@@ -197,8 +215,17 @@ Use the style block + one asset description.
 **Mine rocks:**
 > Set of breakable rocks for a cave, each 16x16 pixels: plain grey-violet stone (2 variants), stone with black coal veins, stone with shiny orange copper ore. Cool bluish-violet palette, transparent background.
 
+**Mine tiles:**
+> Cave tileset, each tile 16x16 pixels, strip 80x16: three seamless cave floor variants (dark blue-violet stone, small pebbles), a raised cave wall tile (lighter top surface, darker front face), a hole in the floor with a wooden ladder going down. Plus a separate 16x16 tile: wooden ladder going up with a soft beam of warm light from above. Cool bluish-violet palette.
+
 **Crops:**
 > Horizontal strip of 4 growth stages of a turnip crop, each 16x16 pixels: seed bump, sprout, young leaves, ripe turnip with purple-white top showing. No soil, transparent background.
+
+**Item icons:**
+> Item icon sheet, each icon 16x16 pixels, one row, no gaps, in this exact order: wooden pickaxe, hoe, watering can, stone, wood log, coal lump, copper ore, turnip seeds packet, carrot seeds packet, turnip, carrot. Clear readable silhouettes, 1px dark outline, transparent background.
+
+**Hotbar UI:**
+> Inventory hotbar slot for a cozy pixel art game, 20x20 pixels, wooden frame with a parchment-colored inside; second version highlighted with a warm honey-yellow border. Plus a 9-slice wooden panel frame, 18x18 pixels with 6x6 corners. Transparent background.
 
 ---
 
