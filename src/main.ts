@@ -9,6 +9,8 @@ new Phaser.Game({
   width: SCREEN_W,
   height: SCREEN_H,
   pixelArt: true,
+  roundPixels: true,
+  physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
   backgroundColor: GRASS_COLOR,
   scale: {
     mode: Phaser.Scale.FIT,

@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import { TILE } from '../constants';
 import { TILE_KINDS, type TileKind } from '../logic/grid';
+import { PLAYER_SIZE } from '../objects/Player';
 import { TILESET_KEY } from '../objects/tilemap';
 
-// Placeholder textures: [key, color]. Real art replaces these later.
-const PLACEHOLDERS: ReadonlyArray<readonly [string, number]> = [
-  ['grass', 0x5a8f3c],
-  ['soil', 0x6b4a2b],
-  ['player', 0xe0b050],
+// Placeholder textures: [key, color, size]. Real art replaces these later.
+const PLACEHOLDERS: ReadonlyArray<readonly [string, number, number]> = [
+  ['grass', 0x5a8f3c, TILE],
+  ['soil', 0x6b4a2b, TILE],
+  ['player', 0xe0b050, PLAYER_SIZE],
 ];
 
 // Placeholder tile colors; strip order comes from TILE_KINDS.
@@ -26,11 +27,11 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     const g = this.make.graphics({ x: 0, y: 0 }, false);
-    for (const [key, color] of PLACEHOLDERS) {
+    for (const [key, color, size] of PLACEHOLDERS) {
       g.clear();
       g.fillStyle(color, 1);
-      g.fillRect(0, 0, TILE, TILE);
-      g.generateTexture(key, TILE, TILE);
+      g.fillRect(0, 0, size, size);
+      g.generateTexture(key, size, size);
     }
 
     // One 16x16 cell per tile kind, side by side.
