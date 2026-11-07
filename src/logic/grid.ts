@@ -1,11 +1,12 @@
 // Pure ASCII-map parser. No engine imports, so it stays unit-testable.
 
 // Order matters: the tile index in the tileset strip equals the index here.
-export const TILE_KINDS = ['grass', 'soil', 'wall', 'tree', 'mine_entrance'] as const;
+// mine_roof = solid top half of the 2x2 mine entrance; mine_entrance = walkable bottom half.
+export const TILE_KINDS = ['grass', 'soil', 'wall', 'tree', 'mine_entrance', 'mine_roof'] as const;
 export type TileKind = (typeof TILE_KINDS)[number];
 
 // Kinds that block movement.
-export const SOLID_KINDS: readonly TileKind[] = ['wall', 'tree'];
+export const SOLID_KINDS: readonly TileKind[] = ['wall', 'tree', 'mine_roof'];
 
 // Legend value for the spawn marker: not a tile, the cell becomes grass.
 const SPAWN_MARKER = 'spawn';
@@ -72,4 +73,23 @@ export function parseMap(map: MapData): Grid {
   }
 
   return { width, height: rows.length, cells, spawn: spawns[0] };
+}
+
+// Top-left cell of the first block of `kind` (row-major scan), e.g. the 2x2 mine entrance.
+export function findBlockOrigin(grid: Grid, kind: TileKind): Cell | undefined {
+  for (let row = 0; row < grid.height; row++) {
+    const col = grid.cells[row].indexOf(kind);
+    if (col >= 0) return { col, row };
+  }
+  return undefined;
+}
+
+// Deterministic grass variant per cell (no flicker, no RNG state). 0 = plain, others rarer.
+export function grassVariant(col: number, row: number, variantCount: number): number {
+  if (variantCount <= 1) return 0;
+  const h = (Math.imul(col, 73856093) ^ Math.imul(row, 19349663)) >>> 0;
+  const r = h % 10;
+  if (r === 0) return 1; // rare: flowers
+  if (r < 3) return Math.min(2, variantCount - 1);
+  return 0;
 }

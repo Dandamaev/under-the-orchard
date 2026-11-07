@@ -1,25 +1,33 @@
 import Phaser from 'phaser';
 import { TILE } from '../constants';
 import { cellInFront, resolveFacing, type Cell, type Facing } from '../logic/facing';
+import { FRAME_H, FRAME_W, idleKey, walkKey } from './playerAnims';
 
 const PLAYER_SPEED = 80; // px/s, ~5 tiles/s
-// Placeholder square smaller than a tile so 1-tile gaps are easy to pass.
-// Hitbox == whole sprite: a flat square must never visually overlap solids.
-export const PLAYER_SIZE = 12;
+// Small hitbox at the feet: 1-tile gaps are easy to pass, and the head may overlap
+// solids visually (top-down perspective).
+const BODY_W = 10;
+const BODY_H = 6;
+// Body centre sits this far below the sprite centre.
+const BODY_CENTER_DY = FRAME_H - BODY_H / 2 - FRAME_H / 2;
 
 type Keys = Record<'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd', Phaser.Input.Keyboard.Key>;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly keys: Keys;
+  private readonly textureKey: string;
   facing: Facing = 'down';
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player');
+  // (feetX, feetY) is where the body centre starts; texture is a character sheet key.
+  constructor(scene: Phaser.Scene, feetX: number, feetY: number, texture: string) {
+    super(scene, feetX, feetY - BODY_CENTER_DY, texture, 0);
+    this.textureKey = texture;
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(PLAYER_SIZE, PLAYER_SIZE);
+    body.setSize(BODY_W, BODY_H);
+    body.setOffset((FRAME_W - BODY_W) / 2, FRAME_H - BODY_H);
     this.setCollideWorldBounds(true);
 
     const keyboard = scene.input.keyboard;
@@ -39,9 +47,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(v.x, v.y);
 
     this.facing = resolveFacing(this.facing, dx, dy);
+    const moving = dx !== 0 || dy !== 0;
+    this.anims.play(moving ? walkKey(this.textureKey, this.facing) : idleKey(this.textureKey, this.facing), true);
+
+    // Depth sorting by the feet line.
+    this.setDepth((this.body as Phaser.Physics.Arcade.Body).bottom);
   }
 
-  // Player cell = cell of the body centre.
+  // Player cell = cell of the body centre (the feet).
   frontCell(): Cell {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const col = Math.floor(body.center.x / TILE);

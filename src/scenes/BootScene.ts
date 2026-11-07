@@ -1,23 +1,16 @@
 import Phaser from 'phaser';
 import { TILE } from '../constants';
 import { TILE_KINDS, type TileKind } from '../logic/grid';
-import { PLAYER_SIZE } from '../objects/Player';
-import { TILESET_KEY } from '../objects/tilemap';
+import { createPlayerAnims, FRAME_H, FRAME_W } from '../objects/playerAnims';
+import { GARDEN_TILES_KEY, GRASS_FRAMES, KIND_FRAMES, TILESET_KEY, TILESET_SLOTS } from '../objects/tilemap';
 
-// Placeholder textures: [key, color, size]. Real art replaces these later.
-const PLACEHOLDERS: ReadonlyArray<readonly [string, number, number]> = [
-  ['grass', 0x5a8f3c, TILE],
-  ['soil', 0x6b4a2b, TILE],
-  ['player', 0xe0b050, PLAYER_SIZE],
-];
+export const MINE_ENTRANCE_KEY = 'mine_entrance';
+const CHARACTER_KEYS = ['player_male', 'player_female'] as const;
 
-// Placeholder tile colors; strip order comes from TILE_KINDS.
-const TILE_COLORS: Record<TileKind, number> = {
-  grass: 0x5a8f3c,
-  soil: 0x6b4a2b,
+// Placeholder colors for kinds without art yet (wall, tree).
+const TILE_COLORS: Partial<Record<TileKind, number>> = {
   wall: 0x7a7a82,
   tree: 0x2d5a27,
-  mine_entrance: 0x15110d,
 };
 
 export class BootScene extends Phaser.Scene {
@@ -25,25 +18,42 @@ export class BootScene extends Phaser.Scene {
     super('Boot');
   }
 
-  create(): void {
-    const g = this.make.graphics({ x: 0, y: 0 }, false);
-    for (const [key, color, size] of PLACEHOLDERS) {
-      g.clear();
-      g.fillStyle(color, 1);
-      g.fillRect(0, 0, size, size);
-      g.generateTexture(key, size, size);
+  preload(): void {
+    for (const key of CHARACTER_KEYS) {
+      this.load.spritesheet(key, `assets/${key}.png`, { frameWidth: FRAME_W, frameHeight: FRAME_H });
     }
+    this.load.spritesheet(GARDEN_TILES_KEY, `assets/${GARDEN_TILES_KEY}.png`, { frameWidth: TILE, frameHeight: TILE });
+    this.load.image(MINE_ENTRANCE_KEY, `assets/${MINE_ENTRANCE_KEY}.png`);
+  }
 
-    // One 16x16 cell per tile kind, side by side.
-    g.clear();
-    TILE_KINDS.forEach((kind, i) => {
-      g.fillStyle(TILE_COLORS[kind], 1);
-      g.fillRect(i * TILE, 0, TILE, TILE);
-    });
-    g.generateTexture(TILESET_KEY, TILE * TILE_KINDS.length, TILE);
-    g.destroy();
+  create(): void {
+    this.buildTileset();
+    for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
     this.scene.start('Garden');
     this.scene.launch('UI');
+  }
+
+  // Compose the 'tiles' strip: slots follow TILE_KINDS, then extra grass variants.
+  private buildTileset(): void {
+    const canvas = this.textures.createCanvas(TILESET_KEY, TILE * TILESET_SLOTS, TILE);
+    if (!canvas) throw new Error('Failed to create tileset canvas');
+    const ctx = canvas.getContext();
+    const source = this.textures.get(GARDEN_TILES_KEY).getSourceImage() as CanvasImageSource;
+
+    const drawFrame = (slot: number, frame: number): void => {
+      ctx.drawImage(source, frame * TILE, 0, TILE, TILE, slot * TILE, 0, TILE, TILE);
+    };
+    TILE_KINDS.forEach((kind, slot) => {
+      const frame = KIND_FRAMES[kind];
+      if (frame !== undefined) {
+        drawFrame(slot, frame);
+      } else {
+        ctx.fillStyle = `#${(TILE_COLORS[kind] ?? 0xff00ff).toString(16).padStart(6, '0')}`;
+        ctx.fillRect(slot * TILE, 0, TILE, TILE);
+      }
+    });
+    GRASS_FRAMES.slice(1).forEach((frame, i) => drawFrame(TILE_KINDS.length + i, frame));
+    canvas.refresh();
   }
 }

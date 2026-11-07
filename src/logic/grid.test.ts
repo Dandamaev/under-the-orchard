@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import garden from '../data/maps/garden.json';
-import { parseMap, SOLID_KINDS, TILE_KINDS } from './grid';
+import { findBlockOrigin, grassVariant, parseMap, SOLID_KINDS, TILE_KINDS } from './grid';
 
-const legend = { '#': 'wall', T: 'tree', '.': 'grass', s: 'soil', M: 'mine_entrance', P: 'spawn' };
+const legend = { '#': 'wall', T: 'tree', '.': 'grass', s: 'soil', M: 'mine_entrance', R: 'mine_roof', P: 'spawn' };
 
 describe('parseMap', () => {
   const small = parseMap({ legend, rows: ['#T#M', '#P.s', '####'] });
@@ -19,8 +19,8 @@ describe('parseMap', () => {
     expect(small.cells[1][1]).toBe('grass');
   });
 
-  it('marks wall and tree as solid only', () => {
-    expect([...SOLID_KINDS].sort()).toEqual(['tree', 'wall']);
+  it('marks wall, tree and mine roof as solid only', () => {
+    expect([...SOLID_KINDS].sort()).toEqual(['mine_roof', 'tree', 'wall']);
     for (const k of SOLID_KINDS) expect(TILE_KINDS).toContain(k);
   });
 
@@ -52,5 +52,32 @@ describe('garden.json', () => {
     expect(grid.height).toBe(25);
     expect(grid.spawn).toEqual({ col: 21, row: 8 });
     expect(grid.cells[8][21]).toBe('grass');
+  });
+});
+
+describe('garden mine entrance', () => {
+  const grid = parseMap(garden);
+
+  it('is a 2x2 block: solid roof row above walkable entrance row', () => {
+    const o = findBlockOrigin(grid, 'mine_roof');
+    expect(o).toEqual({ col: 31, row: 18 });
+    if (!o) return;
+    expect(grid.cells[o.row].slice(o.col, o.col + 2)).toEqual(['mine_roof', 'mine_roof']);
+    expect(grid.cells[o.row + 1].slice(o.col, o.col + 2)).toEqual(['mine_entrance', 'mine_entrance']);
+    expect(SOLID_KINDS).not.toContain('mine_entrance');
+  });
+});
+
+describe('grassVariant', () => {
+  it('is deterministic and within range', () => {
+    for (let i = 0; i < 200; i++) {
+      const v = grassVariant(i, i * 3, 3);
+      expect(v).toBe(grassVariant(i, i * 3, 3));
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(3);
+    }
+  });
+  it('returns 0 for a single variant', () => {
+    expect(grassVariant(5, 5, 1)).toBe(0);
   });
 });
