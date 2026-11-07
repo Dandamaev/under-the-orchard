@@ -26,9 +26,9 @@ export class GardenScene extends Phaser.Scene {
     this.player = new Player(this, cx, cy);
     this.physics.add.collider(this.player, layer);
 
-    // Temporary: static view on spawn (replaced by startFollow in step 4).
+    // Camera stops at map edges; roundPixels keeps the pixel grid steady.
     this.cameras.main.setBounds(0, 0, widthInPixels, heightInPixels);
-    this.cameras.main.centerOn(cx, cy);
+    this.cameras.main.startFollow(this.player, true);
   }
 
   update(): void {
