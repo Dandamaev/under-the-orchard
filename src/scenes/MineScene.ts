@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { SCREEN_H, TILE } from '../constants';
 import caveJson from '../data/maps/mine-cave.json';
 import { isTool } from '../logic/db';
-import { parseMap, type MapData } from '../logic/grid';
+import { parseMap, TILE_KINDS, type MapData } from '../logic/grid';
 import { generateFloor, hitRock, MINE_RULES, type Rock } from '../logic/mine';
 import { createRng } from '../logic/rng';
 import { Hint } from '../objects/hint';
@@ -30,6 +30,7 @@ export class MineScene extends Phaser.Scene {
   private floor = 1;
   private player!: Player;
   private grid!: ReturnType<typeof parseMap>;
+  private layer!: Phaser.Tilemaps.TilemapLayer;
   private hint!: Hint;
   private frontMarker!: Phaser.GameObjects.Rectangle;
   // Keyed "col,row"; only whole rocks are kept here.
@@ -51,6 +52,7 @@ export class MineScene extends Phaser.Scene {
     // Fresh grid every time: later steps edit it (ladder down) without touching the next floor.
     this.grid = parseMap(caveJson as MapData, 'mine_floor');
     const { layer, widthInPixels, heightInPixels } = buildTilemap(this, this.grid);
+    this.layer = layer;
     this.physics.world.setBounds(0, 0, widthInPixels, heightInPixels);
 
     const rockGroup = this.physics.add.staticGroup();
@@ -98,8 +100,11 @@ export class MineScene extends Phaser.Scene {
   private onInteract = (): void => {
     if (isLeaving()) return;
     const { col, row } = this.player.cell();
-    if (this.grid.cells[row]?.[col] === 'ladder_up') {
+    const kind = this.grid.cells[row]?.[col];
+    if (kind === 'ladder_up') {
       fadeToScene(this, 'Garden', { from: 'mine' }, this.player);
+    } else if (kind === 'ladder_down') {
+      fadeToScene(this, 'Mine', { floor: this.floor + 1 }, this.player);
     }
   };
 
@@ -140,7 +145,13 @@ export class MineScene extends Phaser.Scene {
     this.tweens.add({ targets: image, scale: 0, duration: SHRINK_MS, onComplete: () => image.destroy() });
 
     if (result.drop && state.addItem(result.drop, 1) > 0) this.showNoRoom();
-    // TODO(step 6): if (result.ladder) turn the cell into ladder_down.
+    if (result.ladder) this.revealLadderDown(rock.col, rock.row);
+  }
+
+  // Walkable tile: ladder_down is not in SOLID_KINDS, so no collision to update.
+  private revealLadderDown(col: number, row: number): void {
+    this.grid.cells[row][col] = 'ladder_down';
+    this.layer.putTileAt(TILE_KINDS.indexOf('ladder_down'), col, row);
   }
 
   private playHitFeedback(image: Phaser.GameObjects.Image): void {
@@ -173,6 +184,7 @@ export class MineScene extends Phaser.Scene {
     if (this.spaceKey?.isDown || this.mouseHeld) this.tryHit();
 
     const { col, row } = this.player.cell();
-    this.hint.update(this.player, this.grid.cells[row]?.[col] === 'ladder_up' ? 'E — подняться' : null);
+    const here = this.grid.cells[row]?.[col];
+    this.hint.update(this.player, here === 'ladder_up' ? 'E — подняться' : here === 'ladder_down' ? 'E — спуститься' : null);
   }
 }
