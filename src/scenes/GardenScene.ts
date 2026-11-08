@@ -25,6 +25,7 @@ export class GardenScene extends Phaser.Scene {
   private layer!: Phaser.Tilemaps.TilemapLayer;
   private actionInput!: ActionInput;
   private fromMine = false;
+  private crops = new Map<string, Phaser.GameObjects.Image>(); // key "col,row"
 
   constructor() {
     super('Garden');
@@ -71,6 +72,7 @@ export class GardenScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true);
 
     this.hint = new Hint(this);
+    this.crops = new Map(); // scene objects were destroyed on restart
     this.renderPlots();
     state.setFloor(0);
     fadeInScene(this);
@@ -106,19 +108,39 @@ export class GardenScene extends Phaser.Scene {
     return farmAction(state.plots, cell, this.grid.cells[cell.row]?.[cell.col], held, PLANTS);
   }
 
-  // Only 'till' is handled so far; other actions arrive in later steps.
+  // 'water' and 'harvest' arrive in later steps.
   private doAction(action: FarmAction): void {
-    if (action !== 'till') return;
+    if (action !== 'till' && action !== 'plant') return;
     this.actionInput.fire();
-    state.till(this.player.frontCell());
+    const cell = this.player.frontCell();
+    if (action === 'till') state.till(cell);
+    else state.plantSeed(cell);
   }
 
-  // Tiles come from state.plots, so the garden rebuilds itself after the mine.
+  // Tiles and crop sprites come from state.plots, so the garden rebuilds itself after the mine.
   private renderPlots = (): void => {
+    const seen = new Set<string>();
     for (const [key, plot] of state.plots) {
       const [col, row] = key.split(',').map(Number);
       const kind = plot.watered ? 'soil_watered' : 'soil_tilled';
       this.layer.putTileAt(TILE_KINDS.indexOf(kind), col, row);
+
+      if (plot.plant === null) continue;
+      seen.add(key);
+      let sprite = this.crops.get(key);
+      if (!sprite) {
+        sprite = this.add.image((col + 0.5) * TILE, (row + 0.5) * TILE, `crop_${plot.plant}`);
+        sprite.setDepth((row + 1) * TILE); // same bottom-edge sorting as the player
+        this.crops.set(key, sprite);
+      }
+      sprite.setTexture(`crop_${plot.plant}`, plot.stage);
+    }
+    // Drop sprites of cells that no longer hold a plant.
+    for (const [key, sprite] of this.crops) {
+      if (!seen.has(key)) {
+        sprite.destroy();
+        this.crops.delete(key);
+      }
     }
   };
 

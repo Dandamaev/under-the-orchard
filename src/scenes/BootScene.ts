@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TILE } from '../constants';
 import { MINE_RULES } from '../logic/mine';
 import { getItem, ITEM_IDS } from '../logic/db';
+import { PLANTS } from '../logic/farm';
 import { TILE_KINDS, type TileKind } from '../logic/grid';
 import { createPlayerAnims, FRAME_H, FRAME_W } from '../objects/playerAnims';
 import { GARDEN_TILES_KEY, GRASS_FRAMES, KIND_FRAMES, TILESET_KEY, TILESET_SLOTS } from '../objects/tilemap';
@@ -10,6 +11,9 @@ export const MINE_ENTRANCE_KEY = 'mine_entrance';
 const CHARACTER_KEYS = ['player_male', 'player_female'] as const;
 const ICON_SIZE = 14; // slightly smaller than a hotbar slot
 const ICON_OUTLINE = 0x1a1410;
+const CROP_FRAME = 16;
+// Placeholder figure size (w, h) per growth stage.
+const CROP_SIZES: [number, number][] = [[4, 3], [4, 7], [10, 10], [10, 12]];
 
 // Placeholder colors for kinds without art yet (wall, tree).
 const TILE_COLORS: Partial<Record<TileKind, number>> = {
@@ -38,6 +42,7 @@ export class BootScene extends Phaser.Scene {
     this.buildTileset();
     this.buildItemIcons();
     this.buildRockTextures();
+    this.buildCropTextures();
     for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
     this.scene.start('CharacterSelect');
@@ -64,6 +69,30 @@ export class BootScene extends Phaser.Scene {
       g.lineStyle(1, ICON_OUTLINE).strokeRoundedRect(0.5, 0.5, TILE - 1, TILE - 1, 4);
       g.generateTexture(`rock_${type}`, TILE, TILE);
       g.destroy();
+    }
+  }
+
+  // Placeholder 'crop_<plantId>' strip, one 16x16 frame per stage; a loaded spritesheet under
+  // the same key replaces it. Figures grow with the stage; the last one is the ripe crop.
+  private buildCropTextures(): void {
+    for (const [id, def] of Object.entries(PLANTS)) {
+      const key = `crop_${id}`;
+      const frames = def.stageColors.length;
+      const canvas = this.textures.createCanvas(key, CROP_FRAME * frames, CROP_FRAME);
+      if (!canvas) throw new Error(`Failed to create ${key} texture`);
+      const ctx = canvas.getContext();
+      def.stageColors.forEach((color, i) => {
+        const [w, h] = CROP_SIZES[Math.min(i, CROP_SIZES.length - 1)];
+        const x = i * CROP_FRAME + Math.floor((CROP_FRAME - w) / 2);
+        const y = Math.floor((CROP_FRAME - h) / 2);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = '#1a1410';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      });
+      canvas.refresh();
+      for (let i = 0; i < frames; i++) canvas.add(i, 0, i * CROP_FRAME, 0, CROP_FRAME, CROP_FRAME);
     }
   }
 

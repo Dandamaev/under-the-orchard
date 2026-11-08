@@ -1,7 +1,7 @@
 import { HOTBAR_SIZE } from './constants';
-import { maxStackOf, START_INVENTORY } from './logic/db';
+import { getItem, maxStackOf, START_INVENTORY } from './logic/db';
 import { Emitter } from './logic/emitter';
-import { plotKey, till as tillPlot, type Plot } from './logic/farm';
+import { plant as plantCrop, plotKey, till as tillPlot, type Plot } from './logic/farm';
 import type { Cell } from './logic/grid';
 import { Inventory } from './logic/inventory';
 
@@ -63,6 +63,17 @@ export class GameState {
   till(cell: Cell): void {
     if (this.plots.has(plotKey(cell))) return;
     tillPlot(this.plots, cell);
+    this.events.emit('farmChanged');
+  }
+
+  // Plants the seed from the selected slot; caller checked farmAction === 'plant'.
+  plantSeed(cell: Cell): void {
+    const stack = this.inventory.selectedStack();
+    const plantId = stack ? getItem(stack.id).plant : undefined;
+    if (!stack || !plantId) throw new Error('Selected slot holds no seed');
+    plantCrop(this.plots, cell, plantId);
+    this.inventory.removeAt(this.inventory.selected, 1);
+    this.events.emit('inventoryChanged');
     this.events.emit('farmChanged');
   }
 
