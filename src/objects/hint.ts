@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { FONT } from '../constants';
 import { FRAME_H } from './playerAnims';
 import type { Player } from './Player';
 
@@ -11,7 +12,7 @@ export class Hint {
 
   constructor(scene: Phaser.Scene) {
     this.text = scene.add
-      .text(0, 0, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' })
+      .text(0, 0, '', { fontFamily: FONT, fontSize: '8px', color: '#ffffff' })
       .setOrigin(0.5, 1)
       .setStroke('#000000', 2)
       .setDepth(HINT_DEPTH)
@@ -35,7 +36,7 @@ const FLOAT_RISE = 10; // px
 // One-shot text that rises above the hero and fades, e.g. "Нет места".
 export function floatText(scene: Phaser.Scene, player: Player, message: string): void {
   const text = scene.add
-    .text(Math.round(player.x), Math.round(player.y - FRAME_H / 2 - HINT_GAP), message, { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' })
+    .text(Math.round(player.x), Math.round(player.y - FRAME_H / 2 - HINT_GAP), message, { fontFamily: FONT, fontSize: '8px', color: '#ffffff' })
     .setOrigin(0.5, 1)
     .setStroke('#000000', 2)
     .setDepth(FLOAT_DEPTH);

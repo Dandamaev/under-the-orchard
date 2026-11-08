@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import { TILE } from '../constants';
+import { FONT, TILE } from '../constants';
 import { MINE_RULES } from '../logic/mine';
 import { ITEM_IDS } from '../logic/db';
 import { PLANTS } from '../logic/farm';
 import { TILE_KINDS } from '../logic/grid';
+import { buildDigitFont } from '../objects/digitFont';
 import { createPlayerAnims, FRAME_H, FRAME_W } from '../objects/playerAnims';
 import { GARDEN_TILES_KEY, GRASS_FRAMES, KIND_FRAMES, TILESET_KEY, TILESET_SLOTS } from '../objects/tilemap';
 
@@ -26,6 +27,7 @@ export class BootScene extends Phaser.Scene {
     }
     this.load.spritesheet(GARDEN_TILES_KEY, `assets/${GARDEN_TILES_KEY}.png`, { frameWidth: TILE, frameHeight: TILE });
     this.load.image(MINE_ENTRANCE_KEY, `assets/${MINE_ENTRANCE_KEY}.png`);
+    this.load.font(FONT, 'assets/fonts/PressStart2P-Regular.ttf', 'truetype');
     // Item icons and rocks: one PNG per id/type, keyed so scenes find them directly ('item_<id>', 'rock_<type>').
     for (const id of ITEM_IDS) this.load.image(`item_${id}`, `assets/item_${id}.png`);
     for (const type of Object.keys(MINE_RULES.rocks)) this.load.image(`rock_${type}`, `assets/rock_${type}.png`);
@@ -38,6 +40,7 @@ export class BootScene extends Phaser.Scene {
   create(): void {
     this.buildTileset();
     this.buildCropTextures();
+    buildDigitFont(this);
     for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
     this.scene.start('CharacterSelect');

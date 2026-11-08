@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCREEN_H, SCREEN_W } from '../constants';
+import { FONT, SCREEN_H, SCREEN_W } from '../constants';
 import { idleKey, walkKey } from '../objects/playerAnims';
 import { state, type CharacterKey } from '../state';
 
@@ -41,10 +41,10 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.cards = [];
     this.selected = Math.max(0, CHOICES.findIndex((c) => c.key === state.character));
 
-    const textStyle = { fontFamily: 'monospace', color: TEXT_COLOR };
-    this.add.text(SCREEN_W / 2, 30, 'Выбери героя', { ...textStyle, fontSize: '20px' }).setOrigin(0.5);
+    const textStyle = { fontFamily: FONT, color: TEXT_COLOR };
+    this.add.text(SCREEN_W / 2, 30, 'Выбери героя', { ...textStyle, fontSize: '16px' }).setOrigin(0.5);
     this.add
-      .text(SCREEN_W / 2, SCREEN_H - 20, '←/→ — выбрать, Enter — начать', { ...textStyle, fontSize: '12px' })
+      .text(SCREEN_W / 2, SCREEN_H - 20, '←/→ — выбрать, Enter — начать', { ...textStyle, fontSize: '8px' })
       .setOrigin(0.5);
 
     const totalW = CHOICES.length * CARD_W + (CHOICES.length - 1) * CARD_GAP;
@@ -54,7 +54,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       const x = x0 + i * (CARD_W + CARD_GAP);
       const frame = this.add.rectangle(x, CARD_Y, CARD_W, CARD_H).setStrokeStyle(2, HIGHLIGHT_COLOR);
       const sprite = this.add.sprite(x, CARD_Y - 12, choice.key).setScale(SPRITE_SCALE);
-      this.add.text(x, CARD_Y + CARD_H / 2 - 16, choice.label, { ...textStyle, fontSize: '12px' }).setOrigin(0.5);
+      this.add.text(x, CARD_Y + CARD_H / 2 - 16, choice.label, { ...textStyle, fontSize: '8px' }).setOrigin(0.5);
 
       // Click picks and confirms in one go.
       frame.setFillStyle(0xffffff, 0.001).setInteractive({ useHandCursor: true });
