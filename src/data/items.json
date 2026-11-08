@@ -13,6 +13,6 @@
     { "id": "pickaxe_wood", "count": 1 },
     { "id": "hoe", "count": 1 },
     { "id": "watering_can", "count": 1 },
-    { "id": "seed_turnip", "count": 5 }
+    { "id": "seed_turnip", "count": 20 }
   ]
 }

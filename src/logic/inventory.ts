@@ -38,6 +38,17 @@ export class Inventory {
     return left;
   }
 
+  // Taking more than is there is a caller bug, so it throws.
+  removeAt(index: number, count: number): void {
+    const slot = this.slots[index];
+    if (!slot) throw new Error(`Slot ${index} is empty`);
+    if (count > slot.count) {
+      throw new Error(`Slot ${index} holds ${slot.count}, cannot remove ${count}`);
+    }
+    slot.count -= count;
+    if (slot.count === 0) this.slots[index] = null;
+  }
+
   select(index: number): void {
     if (!Number.isInteger(index) || index < 0 || index >= this.slots.length) {
       throw new RangeError(`Slot out of range: ${index}`);

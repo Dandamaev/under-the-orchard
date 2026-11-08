@@ -92,6 +92,30 @@ describe('Inventory.add', () => {
   });
 });
 
+describe('Inventory.removeAt', () => {
+  it('decreases the stack', () => {
+    const inv = make();
+    inv.add('stone', 5);
+    inv.removeAt(0, 2);
+    expect(inv.slots[0]).toEqual({ id: 'stone', count: 3 });
+  });
+
+  it('empties the slot at zero', () => {
+    const inv = make();
+    inv.add('stone', 2);
+    inv.removeAt(0, 2);
+    expect(inv.slots[0]).toBeNull();
+  });
+
+  it('throws on an empty slot or too many, changing nothing', () => {
+    const inv = make();
+    expect(() => inv.removeAt(0, 1)).toThrow();
+    inv.add('stone', 2);
+    expect(() => inv.removeAt(0, 3)).toThrow();
+    expect(inv.slots[0]).toEqual({ id: 'stone', count: 2 });
+  });
+});
+
 describe('Inventory selection', () => {
   it('starts at slot 0 and selects in range', () => {
     const inv = make();

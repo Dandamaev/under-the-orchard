@@ -1,0 +1,9 @@
+{
+  "turnip": {
+    "seed": "seed_turnip",
+    "harvest": "turnip",
+    "harvestCount": 1,
+    "daysPerStage": [1, 1, 1],
+    "stageColors": ["#6b4a2b", "#7fbf5a", "#5aa040", "#e6d6f0"]
+  }
+}
