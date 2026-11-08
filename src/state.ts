@@ -1,6 +1,8 @@
 import { HOTBAR_SIZE } from './constants';
 import { maxStackOf, START_INVENTORY } from './logic/db';
 import { Emitter } from './logic/emitter';
+import { plotKey, till as tillPlot, type Plot } from './logic/farm';
+import type { Cell } from './logic/grid';
 import { Inventory } from './logic/inventory';
 
 // Event name -> payload. Keep in sync with docs/ARCHITECTURE.md section 3.
@@ -9,6 +11,7 @@ export type GameEvents = {
   inventoryChanged: void;
   slotSelected: number;
   floorChanged: number;
+  farmChanged: void;
 };
 
 // Spritesheet keys of the playable characters.
@@ -21,6 +24,7 @@ export class GameState {
   day = START_DAY;
   character: CharacterKey = 'player_male';
   floor = 0; // 0 = garden, 1+ = mine floor
+  readonly plots = new Map<string, Plot>(); // key "col,row"; tilled cells only
   readonly inventory = new Inventory(HOTBAR_SIZE, maxStackOf);
   readonly events = new Emitter<GameEvents>();
 
@@ -54,6 +58,12 @@ export class GameState {
   setFloor(n: number): void {
     this.floor = n;
     this.events.emit('floorChanged', n);
+  }
+
+  till(cell: Cell): void {
+    if (this.plots.has(plotKey(cell))) return;
+    tillPlot(this.plots, cell);
+    this.events.emit('farmChanged');
   }
 
   nextDay(): void {

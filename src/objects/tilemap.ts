@@ -10,7 +10,9 @@ export const GRASS_FRAMES: readonly number[] = [1, 0, 7];
 // Frame of tiles_garden.png drawn for each kind; kinds missing here stay colored placeholders.
 export const KIND_FRAMES: Partial<Record<(typeof TILE_KINDS)[number], number>> = {
   grass: GRASS_FRAMES[0],
-  soil: 3,
+  soil: 2,
+  soil_tilled: 4,
+  soil_watered: 5,
   // The mine entrance sprite is drawn over plain grass.
   mine_entrance: GRASS_FRAMES[0],
   mine_roof: GRASS_FRAMES[0],

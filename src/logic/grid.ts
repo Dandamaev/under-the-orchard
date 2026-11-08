@@ -2,10 +2,11 @@
 
 // Order matters: the tile index in the tileset strip equals the index here.
 // mine_roof = solid top half of the 2x2 mine entrance; mine_entrance = walkable bottom half.
-// Mine kinds are appended at the end so garden indices never shift.
+// New kinds are appended at the end so existing indices never shift.
 export const TILE_KINDS = [
   'grass', 'soil', 'wall', 'tree', 'mine_entrance', 'mine_roof',
   'mine_floor', 'mine_wall', 'ladder_up', 'ladder_down',
+  'soil_tilled', 'soil_watered', // drawn from state.plots, not in map legends
 ] as const;
 export type TileKind = (typeof TILE_KINDS)[number];
 

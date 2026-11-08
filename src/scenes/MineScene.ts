@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import { SCREEN_H, TILE } from '../constants';
+import { TILE } from '../constants';
 import caveJson from '../data/maps/mine-cave.json';
 import { isTool } from '../logic/db';
 import { parseMap, TILE_KINDS, type MapData } from '../logic/grid';
 import { generateFloor, hitRock, MINE_RULES, type Rock } from '../logic/mine';
 import { createRng } from '../logic/rng';
+import { ActionInput } from '../objects/actionInput';
 import { Hint } from '../objects/hint';
 import { Player } from '../objects/Player';
 import { FRAME_H } from '../objects/playerAnims';
@@ -18,7 +19,6 @@ const HIT_COOLDOWN_MS = 250; // pace of held Space / mouse button
 const FLASH_MS = 60;
 const SHRINK_MS = 80;
 const NO_ROOM_MS = 600;
-const HOTBAR_ZONE_Y = SCREEN_H - 30; // presses below this line belong to the hotbar
 
 interface RockView {
   rock: Rock;
@@ -35,9 +35,7 @@ export class MineScene extends Phaser.Scene {
   private frontMarker!: Phaser.GameObjects.Rectangle;
   // Keyed "col,row"; only whole rocks are kept here.
   private rocks = new Map<string, RockView>();
-  private spaceKey: Phaser.Input.Keyboard.Key | undefined;
-  private mouseHeld = false;
-  private lastHitAt = -Infinity;
+  private actionInput!: ActionInput;
 
   constructor() {
     super('Mine');
@@ -83,17 +81,9 @@ export class MineScene extends Phaser.Scene {
     // Unsubscribe on shutdown: the scene instance is reused between floors.
     const kb = this.input.keyboard;
     kb?.on('keydown-E', this.onInteract);
-    this.spaceKey = kb?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.mouseHeld = false;
-    this.lastHitAt = -Infinity;
-    this.input.on('pointerdown', this.onPointerDown);
-    this.input.on('pointerup', this.onPointerUp);
+    this.actionInput = new ActionInput(this, HIT_COOLDOWN_MS);
     this.events.once('shutdown', () => {
       kb?.off('keydown-E', this.onInteract);
-      if (this.spaceKey) kb?.removeKey(this.spaceKey);
-      this.spaceKey = undefined;
-      this.input.off('pointerdown', this.onPointerDown);
-      this.input.off('pointerup', this.onPointerUp);
     });
   }
 
@@ -108,27 +98,17 @@ export class MineScene extends Phaser.Scene {
     }
   };
 
-  // A press that starts on the hotbar is not a hit.
-  private onPointerDown = (p: Phaser.Input.Pointer): void => {
-    if (p.y < HOTBAR_ZONE_Y) this.mouseHeld = true;
-  };
-
-  private onPointerUp = (): void => {
-    this.mouseHeld = false;
-  };
-
   private targetView(): RockView | undefined {
     const { col, row } = this.player.frontCell();
     return this.rocks.get(`${col},${row}`);
   }
 
   private tryHit(): void {
-    if (this.time.now - this.lastHitAt < HIT_COOLDOWN_MS) return;
     const held = state.inventory.selectedStack();
     if (!held || !isTool(held.id, 'pickaxe')) return;
     const view = this.targetView();
     if (!view) return;
-    this.lastHitAt = this.time.now;
+    this.actionInput.fire();
 
     const { rock, image } = view;
     const result = hitRock(rock, MINE_RULES);
@@ -181,7 +161,7 @@ export class MineScene extends Phaser.Scene {
 
     const front = this.player.frontCell();
     this.frontMarker.setPosition(front.col * TILE, front.row * TILE).setVisible(this.targetView() !== undefined);
-    if (this.spaceKey?.isDown || this.mouseHeld) this.tryHit();
+    if (this.actionInput.isReady()) this.tryHit();
 
     const { col, row } = this.player.cell();
     const here = this.grid.cells[row]?.[col];
