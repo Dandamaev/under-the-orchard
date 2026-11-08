@@ -38,6 +38,17 @@ export class Inventory {
     return left;
   }
 
+  // True if add(id, count) would leave nothing behind; changes nothing.
+  canFit(id: string, count: number): boolean {
+    const max = this.maxStackOf(id);
+    let room = 0;
+    for (const slot of this.slots) {
+      if (slot === null) room += max;
+      else if (slot.id === id) room += max - slot.count;
+    }
+    return room >= count;
+  }
+
   // Taking more than is there is a caller bug, so it throws.
   removeAt(index: number, count: number): void {
     const slot = this.slots[index];

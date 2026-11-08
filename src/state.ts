@@ -3,6 +3,7 @@ import { getItem, maxStackOf, START_INVENTORY } from './logic/db';
 import { Emitter } from './logic/emitter';
 import {
   advanceDay,
+  harvest as harvestPlot,
   PLANTS,
   plant as plantCrop,
   plotKey,
@@ -89,6 +90,19 @@ export class GameState {
   water(cell: Cell): void {
     waterPlot(this.plots, cell);
     this.events.emit('farmChanged');
+  }
+
+  // Caller checked farmAction === 'harvest'. False = no room: the crop stays ripe.
+  harvest(cell: Cell): boolean {
+    const plot = this.plots.get(plotKey(cell));
+    if (!plot || plot.plant === null) throw new Error('Nothing to harvest');
+    const def = PLANTS[plot.plant];
+    // All or nothing: a partial harvest would lose the rest.
+    if (!this.inventory.canFit(def.harvest, def.harvestCount)) return false;
+    this.addItem(def.harvest, def.harvestCount);
+    harvestPlot(this.plots, cell);
+    this.events.emit('farmChanged');
+    return true;
   }
 
   // dayChanged alone is enough: the garden re-renders plots on it too.

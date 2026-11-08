@@ -6,9 +6,8 @@ import { parseMap, TILE_KINDS, type MapData } from '../logic/grid';
 import { generateFloor, hitRock, MINE_RULES, type Rock } from '../logic/mine';
 import { createRng } from '../logic/rng';
 import { ActionInput } from '../objects/actionInput';
-import { Hint } from '../objects/hint';
+import { floatText, Hint } from '../objects/hint';
 import { Player } from '../objects/Player';
-import { FRAME_H } from '../objects/playerAnims';
 import { buildTilemap } from '../objects/tilemap';
 import { fadeInScene, fadeToScene, isLeaving } from '../objects/transition';
 import { state } from '../state';
@@ -18,7 +17,6 @@ const MARKER_DEPTH = 10000; // above any y-sorted object
 const HIT_COOLDOWN_MS = 250; // pace of held Space / mouse button
 const FLASH_MS = 60;
 const SHRINK_MS = 80;
-const NO_ROOM_MS = 600;
 
 interface RockView {
   rock: Rock;
@@ -124,7 +122,7 @@ export class MineScene extends Phaser.Scene {
     image.clearTint();
     this.tweens.add({ targets: image, scale: 0, duration: SHRINK_MS, onComplete: () => image.destroy() });
 
-    if (result.drop && state.addItem(result.drop, 1) > 0) this.showNoRoom();
+    if (result.drop && state.addItem(result.drop, 1) > 0) floatText(this, this.player, 'Нет места');
     if (result.ladder) this.revealLadderDown(rock.col, rock.row);
   }
 
@@ -144,15 +142,6 @@ export class MineScene extends Phaser.Scene {
     });
     // Only the image shakes; the static body stays put.
     this.tweens.add({ targets: image, x: baseX + 1, duration: 40, yoyo: true, repeat: 2, onComplete: () => (image.x = baseX) });
-  }
-
-  private showNoRoom(): void {
-    const text = this.add
-      .text(Math.round(this.player.x), Math.round(this.player.y - FRAME_H / 2 - 4), 'Нет места', { fontFamily: 'monospace', fontSize: '8px', color: '#ffffff' })
-      .setOrigin(0.5, 1)
-      .setStroke('#000000', 2)
-      .setDepth(MARKER_DEPTH + 2);
-    this.tweens.add({ targets: text, y: text.y - 10, alpha: 0, duration: NO_ROOM_MS, onComplete: () => text.destroy() });
   }
 
   update(): void {

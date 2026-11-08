@@ -8,7 +8,7 @@ import { ActionInput } from '../objects/actionInput';
 import { Player } from '../objects/Player';
 import { buildTilemap } from '../objects/tilemap';
 import { state } from '../state';
-import { Hint } from '../objects/hint';
+import { floatText, Hint } from '../objects/hint';
 import { fadeInScene, fadeToScene, isLeaving } from '../objects/transition';
 import { MINE_ENTRANCE_KEY } from './BootScene';
 
@@ -113,12 +113,12 @@ export class GardenScene extends Phaser.Scene {
     return farmAction(state.plots, cell, this.grid.cells[cell.row]?.[cell.col], held, PLANTS);
   }
 
-  // 'harvest' arrives in a later step.
   private doAction(action: FarmAction): void {
-    if (action === 'harvest') return;
     this.actionInput.fire();
     const cell = this.player.frontCell();
-    if (action === 'till') state.till(cell);
+    if (action === 'harvest') {
+      if (!state.harvest(cell)) floatText(this, this.player, 'Нет места');
+    } else if (action === 'till') state.till(cell);
     else if (action === 'plant') state.plantSeed(cell);
     else state.water(cell);
   }

@@ -116,6 +116,18 @@ describe('Inventory.removeAt', () => {
   });
 });
 
+describe('Inventory.canFit', () => {
+  it('counts empty slots and partial stacks, changes nothing', () => {
+    const inv = make(2);
+    inv.add('stone', 8);
+    expect(inv.canFit('stone', 12)).toBe(true); // 2 + 10
+    expect(inv.canFit('stone', 13)).toBe(false);
+    expect(inv.canFit('coal', 10)).toBe(true);
+    expect(inv.canFit('coal', 11)).toBe(false);
+    expect(inv.slots).toEqual([{ id: 'stone', count: 8 }, null]);
+  });
+});
+
 describe('Inventory selection', () => {
   it('starts at slot 0 and selects in range', () => {
     const inv = make();
