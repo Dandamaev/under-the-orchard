@@ -8,6 +8,8 @@ const BAR_MARGIN = 4;
 const SLOT_COLOR = 0x2a2218;
 const SLOT_BORDER = 0xf4ecd8;
 const SELECTED_BORDER = 0xf4c542; // same as the hero select highlight
+const DAY_POPUP_HOLD_MS = 400;
+const DAY_POPUP_FADE_MS = 600;
 const SLOT_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'] as const;
 
 interface SlotView {
@@ -68,11 +70,13 @@ export class UIScene extends Phaser.Scene {
 
     // Unsubscribe on shutdown so restarts don't stack handlers.
     state.events.on('dayChanged', this.renderDay);
+    state.events.on('dayChanged', this.popupDay);
     state.events.on('floorChanged', this.renderFloor);
     state.events.on('inventoryChanged', this.renderHotbar);
     state.events.on('slotSelected', this.renderHotbar);
     this.events.once('shutdown', () => {
       state.events.off('dayChanged', this.renderDay);
+      state.events.off('dayChanged', this.popupDay);
       state.events.off('floorChanged', this.renderFloor);
       state.events.off('inventoryChanged', this.renderHotbar);
       state.events.off('slotSelected', this.renderHotbar);
@@ -81,6 +85,21 @@ export class UIScene extends Phaser.Scene {
 
   private renderDay = (day: number): void => {
     this.dayText.setText(`День ${day}`);
+  };
+
+  // Big "Day N" in the middle of the screen; UIScene is not faded by the night fade.
+  private popupDay = (day: number): void => {
+    const text = this.add
+      .text(SCREEN_W / 2, SCREEN_H / 2, `День ${day}`, { fontFamily: 'monospace', fontSize: '24px', color: '#f4ecd8' })
+      .setOrigin(0.5)
+      .setStroke('#000000', 4);
+    this.tweens.add({
+      targets: text,
+      alpha: 0,
+      delay: DAY_POPUP_HOLD_MS,
+      duration: DAY_POPUP_FADE_MS,
+      onComplete: () => text.destroy(),
+    });
   };
 
   // Floor 0 is the garden: no label.

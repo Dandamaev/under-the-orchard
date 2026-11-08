@@ -1,29 +1,19 @@
 import Phaser from 'phaser';
 import { TILE } from '../constants';
 import { MINE_RULES } from '../logic/mine';
-import { getItem, ITEM_IDS } from '../logic/db';
+import { ITEM_IDS } from '../logic/db';
 import { PLANTS } from '../logic/farm';
-import { TILE_KINDS, type TileKind } from '../logic/grid';
+import { TILE_KINDS } from '../logic/grid';
 import { createPlayerAnims, FRAME_H, FRAME_W } from '../objects/playerAnims';
 import { GARDEN_TILES_KEY, GRASS_FRAMES, KIND_FRAMES, TILESET_KEY, TILESET_SLOTS } from '../objects/tilemap';
 
 export const MINE_ENTRANCE_KEY = 'mine_entrance';
 const CHARACTER_KEYS = ['player_male', 'player_female'] as const;
-const ICON_SIZE = 14; // slightly smaller than a hotbar slot
-const ICON_OUTLINE = 0x1a1410;
 const CROP_FRAME = 16;
-// Placeholder figure size (w, h) per growth stage.
+// Placeholder figure size (w, h) per growth stage, used only for plants without a PNG yet.
 const CROP_SIZES: [number, number][] = [[4, 3], [4, 7], [10, 10], [10, 12]];
-
-// Placeholder colors for kinds without art yet (wall, tree).
-const TILE_COLORS: Partial<Record<TileKind, number>> = {
-  wall: 0x7a7a82,
-  tree: 0x2d5a27,
-  mine_floor: 0x4a4258,
-  mine_wall: 0x26202e,
-  ladder_up: 0xd2b06a,
-  ladder_down: 0x8a6a3a,
-};
+// Plants shipping a real sprite sheet 'assets/crop_<id>.png' (one 16x16 frame per stage).
+const CROP_SHEETS: readonly string[] = ['turnip'];
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -36,47 +26,29 @@ export class BootScene extends Phaser.Scene {
     }
     this.load.spritesheet(GARDEN_TILES_KEY, `assets/${GARDEN_TILES_KEY}.png`, { frameWidth: TILE, frameHeight: TILE });
     this.load.image(MINE_ENTRANCE_KEY, `assets/${MINE_ENTRANCE_KEY}.png`);
+    // Item icons and rocks: one PNG per id/type, keyed so scenes find them directly ('item_<id>', 'rock_<type>').
+    for (const id of ITEM_IDS) this.load.image(`item_${id}`, `assets/item_${id}.png`);
+    for (const type of Object.keys(MINE_RULES.rocks)) this.load.image(`rock_${type}`, `assets/rock_${type}.png`);
+    // Crops with art; the rest fall back to generated placeholders in create().
+    for (const id of CROP_SHEETS) {
+      this.load.spritesheet(`crop_${id}`, `assets/crop_${id}.png`, { frameWidth: CROP_FRAME, frameHeight: CROP_FRAME });
+    }
   }
 
   create(): void {
     this.buildTileset();
-    this.buildItemIcons();
-    this.buildRockTextures();
     this.buildCropTextures();
     for (const key of CHARACTER_KEYS) createPlayerAnims(this, key);
 
     this.scene.start('CharacterSelect');
   }
 
-  // Placeholder icons: a PNG loaded under the same 'item_<id>' key can replace them later.
-  private buildItemIcons(): void {
-    for (const id of ITEM_IDS) {
-      const color = Phaser.Display.Color.HexStringToColor(getItem(id).color).color;
-      const g = this.add.graphics();
-      g.fillStyle(color).fillRect(0, 0, ICON_SIZE, ICON_SIZE);
-      g.lineStyle(1, ICON_OUTLINE).strokeRect(0.5, 0.5, ICON_SIZE - 1, ICON_SIZE - 1);
-      g.generateTexture(`item_${id}`, ICON_SIZE, ICON_SIZE);
-      g.destroy();
-    }
-  }
-
-  // Placeholder rocks 'rock_<type>': rounded so they differ from the flat floor.
-  private buildRockTextures(): void {
-    for (const [type, def] of Object.entries(MINE_RULES.rocks)) {
-      const color = Phaser.Display.Color.HexStringToColor(def.color).color;
-      const g = this.add.graphics();
-      g.fillStyle(color).fillRoundedRect(0, 0, TILE, TILE, 4);
-      g.lineStyle(1, ICON_OUTLINE).strokeRoundedRect(0.5, 0.5, TILE - 1, TILE - 1, 4);
-      g.generateTexture(`rock_${type}`, TILE, TILE);
-      g.destroy();
-    }
-  }
-
-  // Placeholder 'crop_<plantId>' strip, one 16x16 frame per stage; a loaded spritesheet under
-  // the same key replaces it. Figures grow with the stage; the last one is the ripe crop.
+  // Generated 'crop_<plantId>' strip for plants without a PNG; a loaded sheet wins.
+  // Figures grow with the stage; the last one is the ripe crop.
   private buildCropTextures(): void {
     for (const [id, def] of Object.entries(PLANTS)) {
       const key = `crop_${id}`;
+      if (this.textures.exists(key)) continue; // real sprite already loaded
       const frames = def.stageColors.length;
       const canvas = this.textures.createCanvas(key, CROP_FRAME * frames, CROP_FRAME);
       if (!canvas) throw new Error(`Failed to create ${key} texture`);
@@ -111,7 +83,8 @@ export class BootScene extends Phaser.Scene {
       if (frame !== undefined) {
         drawFrame(slot, frame);
       } else {
-        ctx.fillStyle = `#${(TILE_COLORS[kind] ?? 0xff00ff).toString(16).padStart(6, '0')}`;
+        // Every kind maps to a frame now; magenta flags a forgotten one.
+        ctx.fillStyle = '#ff00ff';
         ctx.fillRect(slot * TILE, 0, TILE, TILE);
       }
     });

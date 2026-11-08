@@ -6,13 +6,19 @@ export const TILESET_KEY = 'tiles';
 export const GARDEN_TILES_KEY = 'tiles_garden';
 
 // Frames of tiles_garden.png used as grass; variant 0 is the plain one.
-export const GRASS_FRAMES: readonly number[] = [1, 0, 7];
+export const GRASS_FRAMES: readonly number[] = [0, 1, 2];
 // Frame of tiles_garden.png drawn for each kind; kinds missing here stay colored placeholders.
 export const KIND_FRAMES: Partial<Record<(typeof TILE_KINDS)[number], number>> = {
   grass: GRASS_FRAMES[0],
-  soil: 2,
+  soil: 3,
   soil_tilled: 4,
   soil_watered: 5,
+  wall: 6,
+  tree: 7,
+  mine_floor: 8,
+  mine_wall: 9,
+  ladder_up: 10,
+  ladder_down: 11,
   // The mine entrance sprite is drawn over plain grass.
   mine_entrance: GRASS_FRAMES[0],
   mine_roof: GRASS_FRAMES[0],

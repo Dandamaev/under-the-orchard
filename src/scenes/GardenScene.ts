@@ -15,6 +15,7 @@ import { MINE_ENTRANCE_KEY } from './BootScene';
 // Above any y-sorted object (world is < 1000 px tall).
 const MARKER_DEPTH = 10000;
 const ACTION_COOLDOWN_MS = 250; // pace of held Space / mouse button
+const NIGHT_FADE_MS = 300; // each half of the new-day fade
 
 // Garden world: tilemap from the ASCII map plus the walking player.
 export class GardenScene extends Phaser.Scene {
@@ -25,6 +26,7 @@ export class GardenScene extends Phaser.Scene {
   private layer!: Phaser.Tilemaps.TilemapLayer;
   private actionInput!: ActionInput;
   private fromMine = false;
+  private sleeping = false; // true while the screen is dark: input is ignored
   private crops = new Map<string, Phaser.GameObjects.Image>(); // key "col,row"
 
   constructor() {
@@ -79,12 +81,15 @@ export class GardenScene extends Phaser.Scene {
 
     // Unsubscribe on shutdown: the scene instance is reused when returning from the mine.
     const kb = this.input.keyboard;
+    this.sleeping = false;
     kb?.on('keydown-E', this.onInteract);
+    kb?.on('keydown-N', this.onNewDay);
     this.actionInput = new ActionInput(this, ACTION_COOLDOWN_MS);
     state.events.on('farmChanged', this.renderPlots);
     state.events.on('dayChanged', this.renderPlots);
     this.events.once('shutdown', () => {
       kb?.off('keydown-E', this.onInteract);
+      kb?.off('keydown-N', this.onNewDay);
       state.events.off('farmChanged', this.renderPlots);
       state.events.off('dayChanged', this.renderPlots);
     });
@@ -96,7 +101,7 @@ export class GardenScene extends Phaser.Scene {
   }
 
   private onInteract = (): void => {
-    if (isLeaving() || !this.onEntrance()) return;
+    if (isLeaving() || this.sleeping || !this.onEntrance()) return;
     fadeToScene(this, 'Mine', { floor: 1 }, this.player);
   };
 
@@ -108,14 +113,31 @@ export class GardenScene extends Phaser.Scene {
     return farmAction(state.plots, cell, this.grid.cells[cell.row]?.[cell.col], held, PLANTS);
   }
 
-  // 'water' and 'harvest' arrive in later steps.
+  // 'harvest' arrives in a later step.
   private doAction(action: FarmAction): void {
-    if (action !== 'till' && action !== 'plant') return;
+    if (action === 'harvest') return;
     this.actionInput.fire();
     const cell = this.player.frontCell();
     if (action === 'till') state.till(cell);
-    else state.plantSeed(cell);
+    else if (action === 'plant') state.plantSeed(cell);
+    else state.water(cell);
   }
+
+  // Fade out, advance the day in the dark, fade back in. Scene is not restarted.
+  private onNewDay = (): void => {
+    if (this.sleeping || isLeaving()) return;
+    this.sleeping = true;
+    this.player.halt();
+    const cam = this.cameras.main;
+    cam.once('camerafadeoutcomplete', () => {
+      state.nextDay();
+      cam.once('camerafadeincomplete', () => {
+        this.sleeping = false;
+      });
+      cam.fadeIn(NIGHT_FADE_MS, 0, 0, 0);
+    });
+    cam.fadeOut(NIGHT_FADE_MS, 0, 0, 0);
+  };
 
   // Tiles and crop sprites come from state.plots, so the garden rebuilds itself after the mine.
   private renderPlots = (): void => {
@@ -146,6 +168,11 @@ export class GardenScene extends Phaser.Scene {
 
   update(): void {
     if (isLeaving()) return;
+    if (this.sleeping) {
+      this.player.halt();
+      this.frontMarker.setVisible(false);
+      return;
+    }
     this.player.update();
 
     const front = this.player.frontCell();

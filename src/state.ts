@@ -1,7 +1,15 @@
 import { HOTBAR_SIZE } from './constants';
 import { getItem, maxStackOf, START_INVENTORY } from './logic/db';
 import { Emitter } from './logic/emitter';
-import { plant as plantCrop, plotKey, till as tillPlot, type Plot } from './logic/farm';
+import {
+  advanceDay,
+  PLANTS,
+  plant as plantCrop,
+  plotKey,
+  till as tillPlot,
+  water as waterPlot,
+  type Plot,
+} from './logic/farm';
 import type { Cell } from './logic/grid';
 import { Inventory } from './logic/inventory';
 
@@ -77,7 +85,15 @@ export class GameState {
     this.events.emit('farmChanged');
   }
 
+  // Caller checked farmAction === 'water'.
+  water(cell: Cell): void {
+    waterPlot(this.plots, cell);
+    this.events.emit('farmChanged');
+  }
+
+  // dayChanged alone is enough: the garden re-renders plots on it too.
   nextDay(): void {
+    advanceDay(this.plots, PLANTS);
     this.day += 1;
     this.events.emit('dayChanged', this.day);
   }
