@@ -66,7 +66,7 @@ The art must be **original**. It belongs to the general cozy farming genre, but 
 | Surface + mine tiles (12-frame atlas, see 4.2) | `tiles_garden.png` (192×16) | ✅ own simple art — grass×3, bare/tilled/watered soil, stone wall, tree, mine floor/wall, ladders up/down, all in game |
 | Mine entrance | `mine_entrance.png` (32×32) | ✅ in game (AI, kept) |
 | Breakable rocks | `rock_rock/coal/copper.png` | ✅ own simple art — in game |
-| Item icons | `item_<id>.png` ×8 | ✅ own simple art — pickaxe, hoe, can, turnip seeds, turnip, stone, coal, copper in hotbar |
+| Item icons | `item_<id>.png` ×8 | ✅ own simple art, in game — ⚠️ **pickaxe, hoe and watering can read poorly as tools: redraw all three** (see 4.7) |
 | Turnip crop (4 stages) | `crop_turnip.png` (64×16) | ✅ own simple art — in game (P3) |
 | Trees (decor 32×48), house, fence | — | ⬜ later — garden currently uses the 16×16 tree/wall tiles above; big decorative trees & house are future (need map changes) |
 | Tool animations (swing/water) | — | ⬜ later — tools work without an animation |
@@ -75,6 +75,8 @@ The art must be **original**. It belongs to the general cozy farming genre, but 
 Feedback on the delivered hero sprites: format is perfect. Next time please add the **1 px colored outline** from the style guide — the green clothes partly blend with the grass. In the **back view (row 2)** the head is one big dark blob; show a bit of hat brim / hair shape and the neck so it reads as "seen from behind".
 
 Feedback on `mine_entrance.png`: good — it already has the outline and palette we want; use it as the **style reference** for trees and the house.
+
+Feedback on the tool icons: the **wooden pickaxe (`item_pickaxe_wood.png`), the hoe (`item_hoe.png`) and the watering can (`item_watering_can.png`)** don't read as real tools yet — please **redesign all three from scratch** in the target style: a clear tool silhouette with the 1 px colored outline, and the same tool must match what the hero holds in the tool animation (4.1). The resource/seed/crop icons are acceptable as placeholders for now.
 
 ## 3.2 How the garden map is laid out (so sizes fit)
 
@@ -104,22 +106,26 @@ The garden is a 40×25 tile grid. Things that matter for art sizes:
   - → sheet size 6 × 16 = 96 px wide, 96 px tall. The tool may stick out of the 16 px width only if you widen the frame for **all** frames — tell us the new frame size.
 
 #### 4.2 Surface tiles (16×16 each) → `tiles_garden.png`
-The game reads tiles **by their position** in the strip. **Never reorder existing frames** — fix a frame in place, and add new tiles **at the end** (frame 8, 9, …).
+The game reads tiles **by their position** in the strip. **Never reorder existing frames** — fix a frame in place, and add new tiles **at the end** (frame 12, 13, …).
 
-Current strip (128×16, 8 frames):
+**Current file: `tiles_garden.png` — 192×16, 12 frames** (one atlas; the mine tiles live here too, see 4.4). All 12 are placeholder "own simple art" — please **redraw them in the target style but keep this exact order and these frame numbers**:
 
-| Frame | Content | In game | Verdict |
-|---|---|---|---|
-| 0 | Grass with tiny flowers | grass variant (rare) | ✅ keep |
-| 1 | Grass, plain | main grass | ✅ keep |
-| 2 | Light dirt, untilled | not yet (path / bare soil) | ✅ keep |
-| 3 | Dark soil with furrows | the crop field (`soil`) | ✅ keep — this is the "tilled bed" look |
-| 4 | Light horizontal stripes | not used | ⚠️ **redo**: reads as wooden planks, not soil. Replace with **tilled soil, dry**: same furrows as frame 3 but a bit lighter |
-| 5 | Very dark soil with furrows | not used | ⚠️ **redo**: too close to frame 3. Make **tilled soil, watered** = exactly frame 4's furrows, darker and wet (a few dark-blue-brown puddle pixels) — the dry → wet change must be obvious at a glance |
-| 6 | Hedge with brown strip at the bottom | not used | ⛔ do not reuse for the border (a row looks striped) — see 4.3c |
-| 7 | Grass, plain variant | grass variant | ✅ keep |
+| Frame | Content | In game (key) |
+|---|---|---|
+| 0 | Grass, plain | main grass |
+| 1 | Grass variant (e.g. tiny flowers) | grass variant |
+| 2 | Grass variant (e.g. a tuft) | grass variant |
+| 3 | Bare soil, untilled | path / bare ground (`soil`) |
+| 4 | **Tilled soil, dry** (hoed furrows) | crop bed before watering (`soil_tilled`) |
+| 5 | **Tilled soil, watered** (same furrows, darker & wet) | crop bed after watering (`soil_watered`) |
+| 6 | Stone wall (raised: top + front face) | solid wall (`wall`) |
+| 7 | Tree, simple 16×16 | orchard / edge tiles (`tree`) |
+| 8 | Cave floor | mine floor |
+| 9 | Cave wall (raised) | mine wall |
+| 10 | Ladder **up** (light from above) | mine → surface |
+| 11 | Ladder **down** (hole in floor) | deeper floor |
 
-Rule for the tilled pair (frames 4 and 5): **identical shape**, only the colors differ — the game swaps one for the other when the player waters.
+Rule for the tilled pair (frames 4 and 5): **identical shape**, only the colors differ — the game swaps one for the other when the player waters, so the dry → wet change must be obvious at a glance.
 
 **Mine entrance** — ✅ delivered `mine_entrance.png` (32×32).
 
@@ -149,11 +155,10 @@ Both are **tile sets that connect seamlessly** when placed next to each other.
   3. 4 outer corners
   - Must look like a solid, slightly raised edge in 3/4 view (top surface + a bit of the front face).
 
-#### 4.4 Mine tiles (16×16 each) → `tiles_mine.png`, one row in **this exact frame order**:
-0–2. Cave floor (3 variants, seamless; frame 0 = the plain one)
-3. Cave wall (top surface + front face, so walls look raised)
-4. **Ladder down** (hole in floor with ladder)
-5. **Ladder up** (ladder leaning to the ceiling with a little light from above)
+#### 4.4 Mine tiles (16×16 each) — **currently inside `tiles_garden.png`**
+Right now the four mine tiles are frames **8–11 of `tiles_garden.png`** (see the table in 4.2): 8 cave floor, 9 cave wall (top surface + front face, so walls look raised), 10 ladder **up** (a little light from above), 11 ladder **down** (hole in floor with a ladder). Redraw them in place, keeping those frame numbers.
+
+Optional later (Priority 2): split the mine into its own richer tileset `tiles_mine.png` (3 seamless floor variants + wall + both ladders) — only if we rework the mine art, and tell us before changing the layout so the code can be updated.
 
 #### 4.5 Breakable rocks (16×16, transparent)
 1. Small stone (2 variants)
@@ -182,13 +187,23 @@ Not needed for the prototype, listed so the style stays consistent:
 - Grass tufts (2 variants), small wildflowers (2–3 colors), a fern — 16×16, transparent, walkable decor.
 - Berry bush 16×16 (with/without berries).
 
-#### 4.7 Item icons (16×16, transparent) → `items.png`
-One row, **this exact frame order** (the game looks icons up by position; new icons go at the end):
-0 wooden pickaxe, 1 hoe, 2 watering can, 3 stone, 4 wood log, 5 coal, 6 copper ore, 7 turnip seeds, 8 carrot seeds, 9 turnip, 10 carrot → 176×16 px.
+#### 4.7 Item icons (16×16, transparent) — **one PNG per item: `item_<id>.png`**
+The game loads each icon by the item's id, as a **separate file** (not a strip). Deliver these **8 files, exact names** (needed now):
 
-Icon rules: the tool icon must match the tool drawn in the hero's hand (4.1). Ore icons must match their rock (4.5): same coal black, same copper orange, so the player connects "this rock → this item". Icons are shown inside a 20×20 slot, with the stack count drawn by the game in the bottom-right corner — keep the bottom-right 6×6 px of the icon free of important detail.
+| File | Item |
+|---|---|
+| `item_pickaxe_wood.png` | wooden pickaxe |
+| `item_hoe.png` | hoe |
+| `item_watering_can.png` | watering can |
+| `item_seed_turnip.png` | turnip seeds (packet) |
+| `item_turnip.png` | turnip |
+| `item_stone.png` | stone |
+| `item_coal.png` | coal lump |
+| `item_copper_ore.png` | copper ore |
 
-Later icons (Priority 2) **continue the same strip**, in this order: 11 copper pickaxe, 12 copper bar, 13 torch, 14 iron ore, 15 iron bar, 16 crystal, 17 glowing mushroom, 18 coin. Do not draw them now unless asked; the numbers are reserved so the order never changes.
+Icon rules: the three tool icons (**pickaxe, hoe, watering can**) must match the tool drawn in the hero's hand (4.1) — see the redo note in 3.1, they currently read poorly. Ore icons must match their rock (4.5): same coal black, same copper orange, so the player connects "this rock → this item". Icons are shown inside a 20×20 slot, with the stack count drawn by the game in the bottom-right corner — keep the bottom-right 6×6 px free of important detail.
+
+Later items (Priority 2) get their own `item_<id>.png` the same way, when the feature lands: `item_seed_carrot` / `item_carrot`, `item_wood`, `item_copper_pickaxe`, `item_copper_bar`, `item_torch`, `item_iron_ore`, `item_iron_bar`, `item_crystal`, `item_mushroom_glow`, `item_coin`. Don't draw them now unless asked.
 
 #### 4.8 UI
 - Hotbar slot 20×20 px (normal) + selected/highlighted version. The hotbar has **9 slots** in one row at the bottom of a 480×270 screen.
@@ -217,7 +232,7 @@ Later icons (Priority 2) **continue the same strip**, in this order: 11 copper p
 - Fruit trees by season (spring blossom, summer green, autumn fruit, winter bare).
 - Fruit tree **growth stages** (same 32×48 frame, trunk base anchored the same way): sapling → young tree → mature (= the 4.3 tree) — strip `tree_fruit_growth.png`.
 - More crops, same 4-stage 16×16 format as 4.6: potato, pumpkin, strawberry; plus fruit tree kinds: apple, pear, plum.
-- Seed and produce icons for them continue `items.png` after the reserved numbers in 4.7 (19 onwards), in the order the crops are added.
+- Seed and produce icons for them are added as their own `item_<id>.png` files (see 4.7), one per new item.
 - Mine decor: glowing mushrooms, torches (2–4 frame flicker), crystals, underground lake edge tiles.
 - Deep ore rocks: iron, crystal (same format as 4.5).
 - Soft friendly cave creature (non-hostile), 16×16, 2-frame idle.
@@ -260,7 +275,7 @@ Use the style block + one asset description.
 > Same for carrot: seed bump, sprout, feathery young leaves, ripe carrot with orange top showing, 64x16 total.
 
 **Item icons:**
-> Item icon sheet, each icon 16x16 pixels, one row, no gaps, in this exact order: wooden pickaxe, hoe, watering can, stone, wood log, coal lump, copper ore, turnip seeds packet, carrot seeds packet, turnip, carrot. Clear readable silhouettes, 1px dark outline, transparent background.
+> Set of 8 cozy pixel-art item icons, each 16x16 pixels, transparent background, 1px dark-brown outline, clear readable silhouettes: wooden pickaxe, hoe, watering can, turnip seeds packet, turnip, stone, coal lump, copper ore. The pickaxe, hoe and watering can must look like real, recognisable tools. Deliver each icon as a separate file named: item_pickaxe_wood, item_hoe, item_watering_can, item_seed_turnip, item_turnip, item_stone, item_coal, item_copper_ore.
 
 **Hotbar UI:**
 > Inventory hotbar slot for a cozy pixel art game, 20x20 pixels, wooden frame with a parchment-colored inside; second version highlighted with a warm honey-yellow border. Plus a 9-slice wooden panel frame, 18x18 pixels with 6x6 corners. Transparent background.
