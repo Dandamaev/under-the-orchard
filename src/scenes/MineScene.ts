@@ -6,6 +6,8 @@ import { parseMap, TILE_KINDS, type MapData } from '../logic/grid';
 import { generateFloor, hitRock, MINE_RULES, type Rock } from '../logic/mine';
 import { createRng } from '../logic/rng';
 import { ActionInput } from '../objects/actionInput';
+import { burst, ROCK_CRUMBS, ROCK_DUST } from '../objects/effects';
+import { playSfx } from '../objects/sfx';
 import { floatText, Hint } from '../objects/hint';
 import { Player } from '../objects/Player';
 import { buildTilemap } from '../objects/tilemap';
@@ -112,8 +114,12 @@ export class MineScene extends Phaser.Scene {
     const result = hitRock(rock, MINE_RULES);
     if (!result.broken) {
       this.playHitFeedback(image);
+      burst(this, rock.col, rock.row, ROCK_DUST);
+      playSfx(this, 'hit');
       return;
     }
+    burst(this, rock.col, rock.row, ROCK_CRUMBS);
+    playSfx(this, 'break');
 
     // Drop from the map and the physics world at once: walkable now, no double hits.
     this.rocks.delete(`${rock.col},${rock.row}`);
@@ -122,7 +128,10 @@ export class MineScene extends Phaser.Scene {
     image.clearTint();
     this.tweens.add({ targets: image, scale: 0, duration: SHRINK_MS, onComplete: () => image.destroy() });
 
-    if (result.drop && state.addItem(result.drop, 1) > 0) floatText(this, this.player, 'Нет места');
+    if (result.drop) {
+      if (state.addItem(result.drop, 1) > 0) floatText(this, this.player, 'Нет места');
+      else playSfx(this, 'pickup');
+    }
     if (result.ladder) this.revealLadderDown(rock.col, rock.row);
   }
 

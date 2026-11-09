@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 import { GRASS_COLOR, TILE } from '../constants';
 import gardenJson from '../data/maps/garden.json';
 import { getItem } from '../logic/db';
-import { farmAction, PLANTS, type FarmAction } from '../logic/farm';
+import { farmAction, PLANTS, plotKey, type FarmAction } from '../logic/farm';
+import { burst, DIRT, hopAway, SEED_PUFF, SPLASH } from '../objects/effects';
+import { playSfx } from '../objects/sfx';
 import { findBlockOrigin, parseMap, TILE_KINDS, type Grid, type MapData } from '../logic/grid';
 import { ActionInput } from '../objects/actionInput';
 import { Player } from '../objects/Player';
@@ -116,11 +118,31 @@ export class GardenScene extends Phaser.Scene {
   private doAction(action: FarmAction): void {
     this.actionInput.fire();
     const cell = this.player.frontCell();
+    const { col, row } = cell;
     if (action === 'harvest') {
-      if (!state.harvest(cell)) floatText(this, this.player, 'Нет места');
-    } else if (action === 'till') state.till(cell);
-    else if (action === 'plant') state.plantSeed(cell);
-    else state.water(cell);
+      // Remember the look before harvest() removes the plant.
+      const plot = state.plots.get(plotKey(cell));
+      const texture = `crop_${plot?.plant}`;
+      const frame = plot?.stage ?? 0;
+      if (!state.harvest(cell)) {
+        floatText(this, this.player, 'Нет места');
+        return;
+      }
+      hopAway(this, col, row, texture, frame);
+      playSfx(this, 'harvest');
+    } else if (action === 'till') {
+      state.till(cell);
+      burst(this, col, row, DIRT);
+      playSfx(this, 'till');
+    } else if (action === 'plant') {
+      state.plantSeed(cell);
+      burst(this, col, row, SEED_PUFF);
+      playSfx(this, 'plant');
+    } else {
+      state.water(cell);
+      burst(this, col, row, SPLASH);
+      playSfx(this, 'water');
+    }
   }
 
   // Fade out, advance the day in the dark, fade back in. Scene is not restarted.
